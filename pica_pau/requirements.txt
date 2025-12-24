@@ -1,0 +1,14 @@
+# Dependências do Agente PicaPau
+# COMET Bridge Vision Extension
+
+# Playwright para automação de navegador
+playwright>=1.40.0
+
+# Criptografia para credenciais
+cryptography>=41.0.0
+
+# Flask para API (já instalado no vision_server)
+flask>=2.0.0
+
+# Utilitários
+asyncio-compat>=0.1.0

@@ -1,6 +1,6 @@
 # COMET Bridge Vision
 
-Sistema de visão computacional para o ecossistema COMET, permitindo captura e análise de tela usando modelos de IA multimodais.
+Sistema de visão computacional para o ecossistema COMET, permitindo captura e análise de tela usando modelos de IA multimodais, **agora com Agente PicaPau para automação visual**.
 
 ## 🎯 Visão Geral
 
@@ -9,31 +9,35 @@ O COMET Bridge Vision é um servidor que:
 - **Analisa imagens** usando modelos de visão (LLaVA, Gemini, Claude, GPT-4o)
 - **Integra com Obsidian** para criar notas automaticamente
 - **Expõe API REST** para integração com N8n e outros sistemas
+- **🆕 Agente PicaPau** - Executor de comandos visuais com Playwright
 
 ## 🏗️ Arquitetura
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    COMET Bridge Vision                       │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │   Screen    │  │   Vision    │  │     Obsidian        │ │
-│  │   Capture   │──│     AI      │──│   Integration       │ │
-│  │   (mss)     │  │  (LLaVA)    │  │                     │ │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
-│         │                │                    │             │
-│         └────────────────┼────────────────────┘             │
-│                          │                                  │
-│                  ┌───────┴───────┐                         │
-│                  │ Vision Server │                         │
-│                  │  (Flask API)  │                         │
-│                  │  Port: 5003   │                         │
-│                  └───────────────┘                         │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                      COMET Bridge Vision v1.1                        │
+├─────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────────┐ │
+│  │   Screen    │  │   Vision    │  │        PicaPau Agent        │ │
+│  │   Capture   │──│     AI      │──│  (Automação Visual)         │ │
+│  │   (mss)     │  │  (LLaVA)    │  │  ┌─────┐ ┌─────┐ ┌───────┐ │ │
+│  └─────────────┘  └─────────────┘  │  │ NLU │ │Play-│ │Visual │ │ │
+│         │                │         │  │Parse│ │wright│ │Valid. │ │ │
+│         │                │         │  └─────┘ └─────┘ └───────┘ │ │
+│         │                │         └─────────────────────────────┘ │
+│         └────────────────┼───────────────────────┘                 │
+│                          │                                          │
+│                  ┌───────┴───────┐                                 │
+│                  │ Vision Server │                                 │
+│                  │  (Flask API)  │                                 │
+│                  │  Port: 5003   │                                 │
+│                  └───────────────┘                                 │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 📦 Componentes
 
+### Core
 | Arquivo | Descrição |
 |---------|-----------|
 | `vision_server.py` | Servidor Flask com API REST |
@@ -41,6 +45,15 @@ O COMET Bridge Vision é um servidor que:
 | `screen_capture.py` | Captura de tela usando mss |
 | `obsidian_integration.py` | Integração com Obsidian vault |
 | `vision_config.json` | Configurações do sistema |
+
+### 🐦 Agente PicaPau (NOVO!)
+| Arquivo | Descrição |
+|---------|-----------|
+| `pica_pau/nlu_command_parser.py` | Parse de linguagem natural → JSON |
+| `pica_pau/pica_pau_agent.py` | Executor Playwright (clica, digita, navega) |
+| `pica_pau/visual_feedback_validator.py` | Validação de sucesso via COMET Vision |
+| `pica_pau/credentials_manager.py` | Credenciais criptografadas (Fernet) |
+| `pica_pau/pica_pau_api.py` | API REST integrada ao vision_server |
 
 ## 🚀 Instalação
 
@@ -54,7 +67,7 @@ O COMET Bridge Vision é um servidor que:
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/comet-bridge-vision.git
+git clone https://github.com/Rudson-Oliveira/comet-bridge-vision.git
 cd comet-bridge-vision
 ```
 
@@ -68,48 +81,111 @@ pip install -r requirements.txt
 ollama pull llava
 ```
 
-4. Inicie o servidor:
+4. **Instale o PicaPau (opcional):**
+```bash
+cd pica_pau
+pip install -r requirements.txt
+playwright install chromium
+```
+
+5. Inicie o servidor:
 ```bash
 python vision_server.py
 ```
 
-Ou use o arquivo batch:
-```bash
-Iniciar_Vision.bat
-```
-
 ## 📡 API Endpoints
 
-### Health Check
-```http
-GET /health
+### Vision API
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/health` | Status do servidor |
+| POST | `/capture-and-analyze` | Captura e analisa tela |
+| GET | `/history` | Histórico de análises |
+| GET | `/providers` | Provedores disponíveis |
+
+### 🐦 PicaPau API (NOVO!)
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/pica-pau/health` | Status do agente |
+| POST | `/pica-pau/execute` | Executa comando em linguagem natural |
+| POST | `/pica-pau/parse` | Apenas faz parse do comando |
+| POST | `/pica-pau/credentials` | Gerencia credenciais |
+| GET | `/pica-pau/history` | Histórico de execuções |
+
+## 🐦 Agente PicaPau - Guia de Uso
+
+### O que é?
+O PicaPau é um agente de automação visual que:
+1. **Entende comandos em português** (linguagem natural)
+2. **Executa ações no navegador** via Playwright
+3. **Valida o resultado** usando visão computacional (LLaVA)
+
+### Exemplo de Comando
+```
+"PicaPau entre no Hotmail com rud.pa@hotmail.com senha Rudson2323##, salvar senha"
 ```
 
-### Captura e Análise
-```http
-POST /capture-and-analyze
-Content-Type: application/json
+### Fluxo de Execução
+```
+Comando → NLU Parser → JSON → Playwright → Ação → LLaVA → Validação
+```
 
+### Exemplo de Requisição
+```bash
+curl -X POST http://localhost:5003/pica-pau/execute \
+  -H "Content-Type: application/json" \
+  -d '{
+    "command": "PicaPau abra o Google e pesquise por clima São Paulo",
+    "use_vision_feedback": true
+  }'
+```
+
+### Resposta
+```json
 {
-    "prompt": "Descreva o que você vê nesta tela",
-    "provider": "ollama"
+  "success": true,
+  "command_parsed": {
+    "action": "navigate_and_search",
+    "target": "google.com",
+    "search_term": "clima São Paulo"
+  },
+  "actions_log": [
+    {"action": "navigate", "url": "https://google.com", "status": "success"},
+    {"action": "type", "selector": "input[name=q]", "text": "clima São Paulo"},
+    {"action": "click", "selector": "input[type=submit]"}
+  ],
+  "vision_validation": {
+    "success": true,
+    "description": "Página de resultados do Google mostrando clima de São Paulo"
+  },
+  "screenshot": "captures/pica_pau_20241224_140000.png"
 }
 ```
 
-### Histórico
-```http
-GET /history
-```
+### Ações Suportadas
 
-### Status
-```http
-GET /status
-```
+| Ação | Exemplo de Comando |
+|------|-------------------|
+| **Login** | "PicaPau entre no Gmail com email@gmail.com senha 123456" |
+| **Navegação** | "PicaPau abra o site youtube.com" |
+| **Pesquisa** | "PicaPau pesquise no Google por receita de bolo" |
+| **Clique** | "PicaPau clique no botão Entrar" |
+| **Digitação** | "PicaPau digite 'Olá mundo' no campo de busca" |
+| **Scroll** | "PicaPau role a página para baixo" |
+| **Screenshot** | "PicaPau tire uma foto da tela" |
+
+### Segurança
+
+- **Credenciais criptografadas** com Fernet (AES-128)
+- **Perfil de navegador persistente** em `browser_profiles/`
+- **Logs de auditoria** LGPD compliant
+- **Chave mestra** gerada automaticamente
 
 ## ⚙️ Configuração
 
-Edite `vision_config.json`:
-
+### vision_config.json
 ```json
 {
     "providers": {
@@ -123,6 +199,11 @@ Edite `vision_config.json`:
     "capture": {
         "output_dir": "captures",
         "format": "png"
+    },
+    "pica_pau": {
+        "headless": false,
+        "browser_profile": "browser_profiles/default",
+        "timeout": 30
     }
 }
 ```
@@ -138,7 +219,7 @@ Edite `vision_config.json`:
 - Reduz tempo de processamento do LLaVA
 - Mantém qualidade com LANCZOS
 
-### Exemplo de Melhoria de Performance
+### Performance
 | Antes | Depois |
 |-------|--------|
 | ~4 min (timeout) | ~2-3 min |
@@ -146,21 +227,17 @@ Edite `vision_config.json`:
 
 ## 🔗 Integração com Ecossistema COMET
 
-### COMET Bridge (Porta 5000)
-- Automação Windows via PowerShell
-- Execução de comandos remotos
-
-### COMET Bridge Vision (Porta 5003)
-- Análise de visão com LLaVA
-- Captura de tela
-
-### N8n
-- Workflows de automação
-- Integração via webhooks
+| Serviço | Porta | Descrição |
+|---------|-------|-----------|
+| COMET Bridge | 5000 | Automação Windows via PowerShell |
+| Obsidian Agent | 5001 | Agente inteligente Obsidian |
+| Hub Central | 5002 | Orquestrador de gatilhos |
+| **COMET Vision** | **5003** | **Visão + PicaPau** |
+| Frontend | 5173 | Interface web |
 
 ## 📝 Exemplos de Uso
 
-### Python
+### Python - Análise de Tela
 ```python
 import requests
 
@@ -172,29 +249,35 @@ response = requests.post(
     },
     timeout=300
 )
+print(response.json())
+```
 
+### Python - PicaPau
+```python
+import requests
+
+response = requests.post(
+    "http://localhost:5003/pica-pau/execute",
+    json={
+        "command": "PicaPau abra o YouTube e pesquise por música relaxante",
+        "use_vision_feedback": True
+    },
+    timeout=60
+)
 print(response.json())
 ```
 
 ### PowerShell
 ```powershell
 $body = @{
-    prompt = "Descreva a tela"
-    provider = "ollama"
+    command = "PicaPau abra o Google"
+    use_vision_feedback = $true
 } | ConvertTo-Json
 
-Invoke-RestMethod -Uri "http://localhost:5003/capture-and-analyze" `
+Invoke-RestMethod -Uri "http://localhost:5003/pica-pau/execute" `
     -Method POST `
     -ContentType "application/json" `
-    -Body $body `
-    -TimeoutSec 300
-```
-
-### cURL
-```bash
-curl -X POST http://localhost:5003/capture-and-analyze \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "O que você vê?", "provider": "ollama"}'
+    -Body $body
 ```
 
 ## 📄 Licença
@@ -208,3 +291,6 @@ Parte do ecossistema COMET - Cognitive Operational Management & Execution Techno
 ---
 
 **Desenvolvido com 🧠 por Manus AI**
+
+**Versão:** 1.1.0 (com Agente PicaPau)
+**Data:** 24/12/2024
