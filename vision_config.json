@@ -1,0 +1,23 @@
+{
+  "ollama_host": "http://localhost:11434",
+  "ollama_model": "llava",
+  "priority": ["ollama", "gemini", "claude", "openai"],
+  "require_confirmation": true,
+  "hub_central_url": "http://localhost:5002",
+  "obsidian_api_url": "http://localhost:27124",
+  "auto_save_to_obsidian": true,
+  "max_history": 100,
+  "capture_format": "PNG",
+  "capture_quality": 95,
+  "privacy": {
+    "always_ask_before_cloud": true,
+    "allowed_cloud_providers": ["gemini"],
+    "sensitive_keywords": ["senha", "password", "credit", "cartão", "cpf", "cnpj"],
+    "blur_sensitive": false
+  },
+  "api_keys": {
+    "openai": "",
+    "anthropic": "",
+    "google": ""
+  }
+}

@@ -1,0 +1,29 @@
+# COMET Bridge Vision - Dependências
+# ==================================
+
+# Captura de tela
+mss>=9.0.0
+Pillow>=10.0.0
+pyautogui>=0.9.54
+
+# Servidor API
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# Requisições HTTP
+requests>=2.31.0
+
+# IA - Ollama
+ollama>=0.1.0
+
+# IA - OpenAI (opcional)
+openai>=1.0.0
+
+# IA - Anthropic Claude (opcional)
+anthropic>=0.18.0
+
+# IA - Google Gemini (opcional)
+google-generativeai>=0.4.0
+
+# Utilitários
+python-dotenv>=1.0.0
